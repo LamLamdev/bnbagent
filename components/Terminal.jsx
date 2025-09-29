@@ -134,7 +134,7 @@ export default function Terminal({ startInHero = true, sessionId }) {
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder='Ask about BNB: “Which tokens launched today with >50k liquidity?”'
+                placeholder='Ask about BNB: What is the current price of BNB?”'
                 className="w-full bg-transparent text-[15px] text-white/95 [text-shadow:0_0_2px_rgba(0,0,0,0.5)] placeholder:text-white/70 outline-none "
               />
               <button
@@ -213,7 +213,7 @@ export default function Terminal({ startInHero = true, sessionId }) {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about BNB: “Which tokens launched today with >50k liquidity?”"
+              placeholder="Ask about BNB: “What is the current price of BNB?”"
               className="w-full bg-transparent text-[15px] text-white placeholder:text-white/70 outline-none"
             />
             <button
