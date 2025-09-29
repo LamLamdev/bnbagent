@@ -1,7 +1,7 @@
 // app/api/agent/route.js
 import OpenAI from "openai";
 
-export const runtime = "edge";
+
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -13,19 +13,6 @@ Rules:
 - When doing math (PnL, % changes, MCAP, FDV), show result first, then a 1-line formula.
 - If asked for live on-chain data, say you need a contract or a provided snapshot; otherwise explain how to fetch it.
 - Keep answers tight. Bullets > paragraphs for steps.
-
-// When asked for a forecast, return the following Markdown sections:
-//
-// ## BNB Q4 Forecast
-// - Bear (P=%): $low → $mid
-// - Base (P=%): $low → $mid
-// - Bull (P=%): $mid → $high
-//
-// *Drivers:** …
-/* *Risks:** …
-*What to watch:** …
-*/
-
 `;
 
 export async function POST(req) {
@@ -35,14 +22,27 @@ export async function POST(req) {
       return new Response("Bad request", { status: 400 });
     }
 
+    // --- ✅ INTERCEPT FOR "BNB PRICE" ---
+    const lastMessage = messages[messages.length - 1]?.content || "";
+    if (/bnb\s*price/i.test(lastMessage)) {
+      const res = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd"
+      );
+      const data = await res.json();
+      const price = data?.binancecoin?.usd;
+      if (price) {
+        return new Response(`BNB price is **$${price.toLocaleString()}**`, {
+          headers: { "Content-Type": "text/plain; charset=utf-8" },
+        });
+      }
+    }
+
+    // --- OTHERWISE → FALLBACK TO OPENAI ---
     const trimmed = messages.slice(-16);
 
     const response = await client.responses.create({
       model: "gpt-4o-mini",
-      input: [
-        { role: "system", content: SYSTEM_PROMPT },
-        ...trimmed,
-      ],
+      input: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
       stream: true,
     });
 
@@ -56,7 +56,7 @@ export async function POST(req) {
           if (event.type === "response.completed") break;
         }
         controller.close();
-      }
+      },
     });
 
     return new Response(stream, {
