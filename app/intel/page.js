@@ -269,190 +269,230 @@ const makeXSearchUrl = (contract, symbol) => {
 const TokenIntelCard = ({ data, loading, error }) => {
   const [copied, setCopied] = useState(false);
 
- const copyAddress = () => {
-  if (!data || !data.contract) {
-    console.warn('No contract address to copy');
-    return;
+  // ✅ Guard states
+  if (loading) return <LoadingSkeleton />;
+  if (error) {
+    return (
+      <div className="text-red-400 text-sm p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+        ⚠️ {error}
+      </div>
+    );
   }
-  
-  // Check if clipboard API is available
-  if (!navigator?.clipboard) {
-    console.error('Clipboard API not available');
-    // Fallback: create a temporary input element
-    const input = document.createElement('input');
-    input.value = data.contract;
-    document.body.appendChild(input);
-    input.select();
-    document.execCommand('copy');
-    document.body.removeChild(input);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    return;
-  }
-  
-  navigator.clipboard.writeText(data.contract)
-    .then(() => {
+  if (!data) return null;
+
+  const copyAddress = () => {
+    if (!data || !data.contract) return;
+
+    if (!navigator?.clipboard) {
+      const input = document.createElement('input');
+      input.value = data.contract;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    })
-    .catch(err => {
-      console.error('Failed to copy:', err);
-    });
-};
+      return;
+    }
 
+    navigator.clipboard.writeText(data.contract)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => console.error('Failed to copy:', err));
+  };
 
-const searchUrl = makeXSearchUrl(data.contract, data.symbol);
+  // ✅ Safe to generate only after data exists
+  const searchUrl = makeXSearchUrl(data.contract, data.symbol);
+
   return (
     <div className="space-y-4 relative">
-      {/* Animated background elements - subtle for integration */}
+      {/* Subtle background */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/20 rounded-full blur-2xl animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-500/20 rounded-full blur-xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div
+          className="absolute bottom-0 left-0 w-24 h-24 bg-amber-500/20 rounded-full blur-xl animate-pulse"
+          style={{ animationDelay: '1s' }}
+        ></div>
       </div>
-      
-   <div className="relative z-10">
-  {/* Header Section */}
-  <div className="flex items-start justify-between mb-4">
-    <div className="space-y-2">
-      <h3 className="text-lg font-bold text-white leading-tight">
-        {data.tokenName || 'Unknown Token'}
-        <span className="text-sm text-gray-400 ml-2">${data.symbol || 'UNKNOWN'}</span>
-      </h3>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={copyAddress}
-          className="inline-flex items-center gap-2 px-2 py-1 bg-gray-700/50 rounded border border-gray-600/50 cursor-pointer hover:bg-gray-600/50 transition-all duration-200 group"
-        >
-          <span className="text-xs font-mono text-gray-300">{formatAddress(data.contract)}</span>
-          <div className="w-3 h-3 text-gray-400 group-hover:text-yellow-400 transition-colors">📋</div>
-          {copied && (
-            <span className="text-xs text-emerald-400">✓</span>
-          )}
-        </button>
-        <div className="inline-block px-2 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-xs font-medium text-yellow-300">
-          {data.chain || 'BNB'}
+
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="space-y-2">
+            <h3 className="text-lg font-bold text-white leading-tight">
+              {data.tokenName || 'Unknown Token'}
+              <span className="text-sm text-gray-400 ml-2">
+                ${data.symbol || 'UNKNOWN'}
+              </span>
+            </h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={copyAddress}
+                className="inline-flex items-center gap-2 px-2 py-1 bg-gray-700/50 rounded border border-gray-600/50 cursor-pointer hover:bg-gray-600/50 transition-all duration-200 group"
+              >
+                <span className="text-xs font-mono text-gray-300">
+                  {formatAddress(data.contract)}
+                </span>
+                <div className="w-3 h-3 text-gray-400 group-hover:text-yellow-400 transition-colors">
+                  📋
+                </div>
+                {copied && <span className="text-xs text-emerald-400">✓</span>}
+              </button>
+              <div className="inline-block px-2 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-xs font-medium text-yellow-300">
+                {data.chain || 'BNB'}
+              </div>
+            </div>
+          </div>
+          <SafetyGauge score={data.safetyScore} />
         </div>
-      </div>
-    </div>
-    <SafetyGauge score={data.safetyScore} />
-  </div>
 
         {/* Risk Indicators */}
         <div className="space-y-2 mb-4">
-          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Risk Assessment</h4>
+          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            Risk Assessment
+          </h4>
           <div className="grid grid-cols-3 gap-2">
-            <RiskIndicator 
-              label="Bundlers" 
-              value={data.bundlersPct} 
+            <RiskIndicator
+              label="Bundlers"
+              value={data.bundlersPct}
               type="percentage"
               tooltip="Percentage of transactions from MEV bundlers"
             />
-            <RiskIndicator 
-              label="Honeypot" 
+            <RiskIndicator
+              label="Honeypot"
               value={data.honeypot}
               tooltip="Whether the token prevents selling"
             />
-            <RiskIndicator 
-              label="Rug Risk" 
-              value={data.rugRatioPct} 
+            <RiskIndicator
+              label="Rug Risk"
+              value={data.rugRatioPct}
               type="percentage"
               tooltip="Probability of rug pull based on liquidity and ownership"
             />
           </div>
         </div>
 
-        
-
-        {/* Market Metrics */}
+        {/* Market Data */}
         <div className="space-y-2 mb-4">
-          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Market Data</h4>
+          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            Market Data
+          </h4>
           <div className="grid grid-cols-2 gap-3">
-            <MetricCard 
-              icon="💎" 
-              label="Market Cap" 
+            <MetricCard
+              icon="💎"
+              label="Market Cap"
               primary={formatUSD(data.mcUSD)}
-            
             />
-            <MetricCard 
-              icon="💧" 
-              label="Liquidity" 
+            <MetricCard
+              icon="💧"
+              label="Liquidity"
               primary={formatUSD(data.liquidityUSD)}
-              secondary={data.lpLockPct ? `${data.lpLockPct}% locked in ${data.lpLockDest}` : null}
+              secondary={
+                data.lpLockPct
+                  ? `${data.lpLockPct}% locked in ${data.lpLockDest}`
+                  : null
+              }
               accent="text-blue-400"
             />
-            <MetricCard 
-              icon="📈" 
-              label="24h Volume" 
+            <MetricCard
+              icon="📈"
+              label="24h Volume"
               primary={formatUSD(data.volume24hUSD)}
-             
             />
-            <MetricCard 
-  icon="📊" 
-  label="24h Change" 
-  primary={data.priceChange24h ? `${data.priceChange24h > 0 ? '+' : ''}${data.priceChange24h.toFixed(2)}%` : 'N/A'}
-  accent={data.priceChange24h > 0 ? "text-green-400" : data.priceChange24h < 0 ? "text-red-400" : "text-gray-400"}
-/>
-            <MetricCard 
-              icon="⏰" 
-              label="Token Age" 
+            <MetricCard
+              icon="📊"
+              label="24h Change"
+              primary={
+                data.priceChange24h
+                  ? `${data.priceChange24h > 0 ? '+' : ''}${data.priceChange24h.toFixed(2)}%`
+                  : 'N/A'
+              }
+              accent={
+                data.priceChange24h > 0
+                  ? 'text-green-400'
+                  : data.priceChange24h < 0
+                  ? 'text-red-400'
+                  : 'text-gray-400'
+              }
+            />
+            <MetricCard
+              icon="⏰"
+              label="Token Age"
               primary={formatTimeAgo(data.ageMinutes)}
-              
             />
-           <MetricCard 
-  icon="🔄" 
-  label="Vol/Liq Activity" 
-  primary={data.volLiqRatio ? `${data.volLiqRatio}%` : 'N/A'}
-  accent={data.volLiqRatio > 50 ? "text-green-400" : data.volLiqRatio > 20 ? "text-yellow-400" : "text-red-400"}
-/>
+            <MetricCard
+              icon="🔄"
+              label="Vol/Liq Activity"
+              primary={data.volLiqRatio ? `${data.volLiqRatio}%` : 'N/A'}
+              accent={
+                data.volLiqRatio > 50
+                  ? 'text-green-400'
+                  : data.volLiqRatio > 20
+                  ? 'text-yellow-400'
+                  : 'text-red-400'
+              }
+            />
           </div>
         </div>
 
         {/* Holder Analysis */}
         <div className="space-y-2 mb-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Holder Analysis</h4>
+            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+              Holder Analysis
+            </h4>
             <div className="flex items-center gap-1">
               <span className="text-xs text-gray-500">Dev:</span>
               <div className="flex items-center gap-1">
-                <span className="text-xs">{data.holders?.devSold ? '🔴' : '🟢'}</span>
-                <span className="text-xs text-gray-400">{data.holders?.devTokens || 'N/A'}</span>
+                <span className="text-xs">
+                  {data.holders?.devSold ? '🔴' : '🟢'}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {data.holders?.devTokens || 'N/A'}
+                </span>
               </div>
             </div>
           </div>
           <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-lg p-3 border border-gray-600/30">
-           <HolderDistribution
-  total={data?.holders?.total}
-  topHolders={data?.holders?.topHolders || []}
-  categories={data?.holders?.categories || null}
-/>
-
+            <HolderDistribution
+              total={data?.holders?.total}
+              topHolders={data?.holders?.topHolders || []}
+            />
           </div>
         </div>
 
         {/* Four Meme Info */}
         {data.isFourMemeToken && (
           <div className="space-y-2 mb-4">
-            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Four Meme Status</h4>
+            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+              Four Meme Status
+            </h4>
             <div className="grid grid-cols-2 gap-3">
-              <MetricCard 
-                icon="🚀" 
-                label="Migration" 
+              <MetricCard
+                icon="🚀"
+                label="Migration"
                 primary={data.migrationStatus || 'Unknown'}
                 accent="text-blue-400"
               />
-              <MetricCard 
-                icon="📊" 
-                label="Bonding Curve" 
-                primary={data.bondingCurveProgress ? `${data.bondingCurveProgress.toFixed(1)}%` : 'N/A'}
+              <MetricCard
+                icon="📊"
+                label="Bonding Curve"
+                primary={
+                  data.bondingCurveProgress
+                    ? `${data.bondingCurveProgress.toFixed(1)}%`
+                    : 'N/A'
+                }
                 accent="text-green-400"
               />
             </div>
           </div>
         )}
 
-        {/* Action Button */}
+        {/* Action */}
         <div>
-          <a 
+          <a
             href={searchUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -467,15 +507,14 @@ const searchUrl = makeXSearchUrl(data.contract, data.symbol);
   );
 };
 
+
 export default function IntelPage() {
   const [contract, setContract] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
 
-  const isValidAddress = (address) => {
-    return /^0x[a-fA-F0-9]{40}$/.test(address);
-  };
+  const isValidAddress = (address) => /^0x[a-fA-F0-9]{40}$/.test(address);
 
   const handleAnalyze = async (address) => {
     if (!address.trim()) {
@@ -483,7 +522,6 @@ export default function IntelPage() {
       setError('');
       return;
     }
-    
     if (!isValidAddress(address)) {
       setError('Invalid BNB contract address');
       setData(null);
@@ -492,21 +530,15 @@ export default function IntelPage() {
 
     setError('');
     setLoading(true);
-
     try {
       const response = await fetch('/api/token-intel', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tokenAddress: address }),
       });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to analyze token');
-      }
+      if (!response.ok) throw new Error(result.error || 'Failed to analyze token');
 
       if (result.success && result.data) {
         setData(result.data);
@@ -522,14 +554,11 @@ export default function IntelPage() {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleAnalyze(contract);
-    }
+    if (e.key === 'Enter') handleAnalyze(contract);
   };
 
   const handleInputChange = (e) => {
     setContract(e.target.value);
-    // Clear data if input is empty
     if (!e.target.value.trim()) {
       setData(null);
       setError('');
@@ -539,11 +568,20 @@ export default function IntelPage() {
 
   const showAnalyzeButton = contract.trim() && !data && !loading && !error;
 
+  // 🟡 check for prebonded (market cap & liquidity = 0)
+const isPreBonded =
+  data &&
+  (data.mcUSD === 0 || data.mcUSD == null) &&
+  (data.liquidityUSD === 0 || data.liquidityUSD == null);
+
   return (
     <div className="flex justify-center items-start min-h-screen pt-48 gap-6 px-4">
-      {/* Main Intel Card - centered with original sizing */}
-      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[var(--panel)] p-6 shadow-xl" style={{width: '32rem'}}>
+      <div
+        className="w-full max-w-lg rounded-2xl border border-white/10 bg-[var(--panel)] p-6 shadow-xl"
+        style={{ width: '32rem' }}
+      >
         <h2 className="text-xl font-semibold mb-4">Token Intel Brief</h2>
+
         <input
           value={contract}
           onChange={handleInputChange}
@@ -551,8 +589,7 @@ export default function IntelPage() {
           placeholder="Paste contract (0x…)"
           className="w-full bg-transparent border border-white/10 rounded px-3 py-2 mb-4 placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-bnb-yellow"
         />
-        
-        {/* Analyze Button */}
+
         {showAnalyzeButton && (
           <button
             onClick={() => handleAnalyze(contract)}
@@ -561,16 +598,23 @@ export default function IntelPage() {
             Analyze
           </button>
         )}
-        
-        {/* Intel Card Content */}
+
         <div className="min-h-0 text-center">
           {!contract.trim() && !data && !loading && !error && (
             <div className="text-bnb-yellow/70 text-sm">
               Advanced DeFi Risk Analysis
             </div>
           )}
-          <TokenIntelCard data={data} loading={loading} error={error} />
+
+          {isPreBonded ? (
+            <div className="text-yellow-400 text-sm p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+              ⚠️ Paste a MIGRATED token contract address to analyze
+            </div>
+          ) : (
+            <TokenIntelCard data={data} loading={loading} error={error} />
+          )}
         </div>
       </div>
-  </div>
-)}
+    </div>
+  );
+}
