@@ -6,10 +6,9 @@ import ConditionalSidebar from '@/components/ConditionalSidebar';
 export const metadata = {
   title: 'BNB Agent AI Terminal',
   description: 'BNB-only intelligence terminal',
-  icons: {
-    icon: '/bb.png',   // ✅ Your favicon from /public
-  },
+  // remove icons: { icon: '/bb.png' }
 };
+
 
 export default function RootLayout({ children }) {
   return (
