@@ -31,7 +31,7 @@ export async function POST(req) {
       const data = await res.json();
       const price = data?.binancecoin?.usd;
       if (price) {
-        return new Response(`BNB price is *$${price.toLocaleString()}*`, {
+        return new Response(`BNB price is $${price.toLocaleString()}`, {
           headers: { "Content-Type": "text/plain; charset=utf-8" },
         });
       }
