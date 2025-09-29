@@ -1,8 +1,6 @@
 // app/api/agent/route.js
 import OpenAI from "openai";
 
-
-
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const SYSTEM_PROMPT = `
@@ -51,7 +49,13 @@ export async function POST(req) {
       async start(controller) {
         for await (const event of response) {
           if (event.type === "response.output_text.delta") {
-            controller.enqueue(encoder.encode(event.delta));
+            let delta = event.delta;
+
+            // 🔹 Sanitize markdown (remove bolds, italics, etc.)
+            delta = delta.replace(/\*\*(.*?)\*\*/g, "$1"); // remove **bold**
+            delta = delta.replace(/\*(.*?)\*/g, "$1");     // remove *italics*
+
+            controller.enqueue(encoder.encode(delta));
           }
           if (event.type === "response.completed") break;
         }
