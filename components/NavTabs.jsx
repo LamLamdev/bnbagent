@@ -37,7 +37,7 @@ export default function NavTabs() {
 
       {/* X Logo in top right */}
       <a 
-        href="https://x.com/trybnbagent" 
+        href="https://x.com/AgentOnBNB" 
         target="_blank" 
         rel="noopener noreferrer"
         className="fixed top-6 right-6 z-50 hover:opacity-80 transition-opacity"
