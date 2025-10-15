@@ -132,7 +132,7 @@ export default function Terminal({ startInHero = true, sessionId }) {
       <div className="fixed left-1/2 top-[400px] -translate-x-1/2 z-10 flex flex-col items-center gap-3">
         <div className="h-18 w-18 flex items-center justify-center">
           <Image
-            src="/mascot.jpg"
+            src="/heromas.png"
             alt="BNB Agent Mascot"
             width={75}
             height={75}
