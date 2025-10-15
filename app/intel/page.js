@@ -589,14 +589,14 @@ const isPreBonded =
           className="w-full bg-transparent border border-white/10 rounded px-3 py-2 mb-4 placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-bnb-yellow"
         />
 
-        {showAnalyzeButton && (
-          <button
-            onClick={() => handleAnalyze(contract)}
-            className="bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black font-semibold py-2 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] mb-4 text-sm mx-auto block"
-          >
-            Analyze
-          </button>
-        )}
+      {showAnalyzeButton && (
+  <button
+    onClick={() => handleAnalyze(contract)}
+    className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] mb-4 text-sm mx-auto block"
+  >
+    Analyze
+  </button>
+)}
 
         <div className="min-h-0 text-center">
           {!contract.trim() && !data && !loading && !error && (
