@@ -4,7 +4,7 @@ import Sidebar from '@/components/Sidebar';
 import ConditionalSidebar from '@/components/ConditionalSidebar';
 
 export const metadata = {
-  title: 'TutorAI Translate The Meta',
+  title: 'TutorAI - Translate the meta',
   description: 'BNB-only intelligence terminal',
   icons: {
     icon: '/favmas.png',
