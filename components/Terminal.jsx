@@ -27,6 +27,23 @@ export default function Terminal({ startInHero = true, sessionId }) {
   const [hero, setHero] = useState(startInHero);
   const bottomRef = useRef(null);
 
+  // Cycling placeholders
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+ const placeholders = [
+  'Ask TutorAI: "What does 龙币 mean?"',
+  'Ask TutorAI: "Translate this token name — 悟空."',
+  'Ask TutorAI: "Explain the meaning of 发财."',
+  'Ask TutorAI: "What\'s trending in the Chinese meta?"'
+];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // scroll down when messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -109,52 +126,52 @@ export default function Terminal({ startInHero = true, sessionId }) {
   };
 
   // ---------- HERO ----------
-  if (hero) {
-    return (
-      <div className="w-full">
-        <div className="fixed left-1/2 top-[400px] -translate-x-1/2 z-10 flex flex-col items-center gap-3">
-          <div className="h-18 w-18 rounded-xl bg-yellow-600 border-2 border-black flex items-center justify-center shadow-md">
-            <Image
-              src="/head.png"
-              alt="BNB Agent Mascot"
-              width={75}
-              height={75}
-              className="object-contain"
-            />
-          </div>
-          <h1 className="text-2xl font-bold text-white drop-shadow-strong">
-            <span className="text-bnb-yellow">BNB</span>
-            <span className="text-white">AGENT</span>
-          </h1>
+ if (hero) {
+  return (
+    <div className="w-full">
+      <div className="fixed left-1/2 top-[400px] -translate-x-1/2 z-10 flex flex-col items-center gap-3">
+        <div className="h-18 w-18 flex items-center justify-center">
+          <Image
+            src="/mascot.jpg"
+            alt="BNB Agent Mascot"
+            width={75}
+            height={75}
+            className="object-contain"
+          />
         </div>
+        <h1 className="text-2xl font-bold text-white drop-shadow-strong">
+          <span className="text-chinese-red">Tutor</span>
+          <span className="text-white">AI</span>
+        </h1>
+      </div>
 
-        <div className="fixed left-1/2 top-[565px] -translate-x-1/2 w-[92vw] max-w-3xl z-10">
-          <div className="rounded-2xl border border-black/10 font-semibold bg-gradient-to-r from-yellow-600 to-yellow-500 shadow-lg backdrop-blur">
-            <form onSubmit={send} className="p-6 flex items-center">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder='Ask about BNB: What is the current price of BNB?”'
-                className="w-full bg-transparent text-[15px] text-white/95 [text-shadow:0_0_2px_rgba(0,0,0,0.5)] placeholder:text-white/70 outline-none "
+      <div className="fixed left-1/2 top-[565px] -translate-x-1/2 w-[92vw] max-w-3xl z-10">
+        <div className="rounded-2xl border border-black/10 font-semibold  bg-gradient-to-r from-red-600 to-red-500 shadow-lg backdrop-blur">
+          <form onSubmit={send} className="p-6 flex items-center">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={placeholders[placeholderIndex]}
+              className="w-full bg-transparent text-[15px] text-white/95 [text-shadow:0_0_2px_rgba(0,0,0,0.5)] placeholder:text-white/70 outline-none "
+            />
+            <button
+              type="submit"
+              className="ml-4 h-9 w-9 grid place-items-center rounded-lg bg-black/20 hover:bg-black/40 transition"
+              aria-label="Send"
+              title="Send"
+            >
+              <img
+                src="/arrow.png"
+                alt="Send"
+                className="w-4 h-4 object-contain"
               />
-              <button
-                type="submit"
-                className="ml-4 h-9 w-9 grid place-items-center rounded-lg bg-black/20 hover:bg-black/40 transition"
-                aria-label="Send"
-                title="Send"
-              >
-                <img
-                  src="/arrow.png"
-                  alt="Send"
-                  className="w-4 h-4 object-contain"
-                />
-              </button>
-            </form>
-          </div>
+            </button>
+          </form>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // ---------- CONVERSATION ----------
   return (
@@ -164,7 +181,7 @@ export default function Terminal({ startInHero = true, sessionId }) {
           <div key={i} className="max-w-3xl ml-0 mx-auto">
             {m.role === 'user' && (
               <div className="px-4 sm:px-6 mt-9">
-                <div className="inline-block rounded-xl bg-bnb-yellow bg-gradient-to-r from-yellow-600 to-yellow-500 shadow-lg backdrop-blur px-4 py-2 text-white text-lg font-medium shadow-md">
+                <div className="inline-block rounded-xl bg-chinese-red bg-gradient-to-r from-red-600 to-red-500 shadow-lg backdrop-blur px-4 py-2 text-white text-lg font-medium shadow-md">
                   {m.text}
                 </div>
               </div>
@@ -173,9 +190,9 @@ export default function Terminal({ startInHero = true, sessionId }) {
             {m.role === 'ai' && (
               <div className="mt-4 rounded-xl border border-black/10 bg-white/10 backdrop-blur text-white border-white/20">
                 <div className="flex items-center gap-2 px-4 py-2 text-xs text-white/60">
-                  <div className="h-6 w-6 rounded-md bg-bnb-yellow flex items-center justify-center shadow-sm">
+                  <div className="h-6 w-6 rounded-md bg-chinese-red flex items-center justify-center shadow-sm">
                     <Image
-                      src="/head.png"
+                      src="/mascot.jpg"
                       alt="BNB Agent Mascot"
                       width={24}
                       height={24}
@@ -199,7 +216,7 @@ export default function Terminal({ startInHero = true, sessionId }) {
         ))}
 
         {isTyping && (
-          <div className="inline-block mx-4 mt-2 rounded-xl border-2 border-bnb-yellow bg-transparent px-4 py-2 text-sm text-white/80">
+          <div className="inline-block mx-4 mt-2 rounded-xl border-2 border-chinese-red bg-transparent px-4 py-2 text-sm text-white/80">
             Thinking…
           </div>
         )}
@@ -208,12 +225,12 @@ export default function Terminal({ startInHero = true, sessionId }) {
       </div>
 
       <div className="fixed left-1/2 -translate-x-1/2 bottom-6 w-[92vw] max-w-3xl">
-        <div className="rounded-2xl border border-black/10 font-semibold bg-gradient-to-r from-yellow-600 to-yellow-500 shadow-lg backdrop-blur shadow-lg backdrop-blur">
+        <div className="rounded-2xl border border-black/10 font-semibold bg-gradient-to-r from-red-600 to-red-500 shadow-lg backdrop-blur shadow-lg backdrop-blur">
           <form onSubmit={send} className="p-4 flex items-center">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about BNB: “What is the current price of BNB?”"
+              placeholder={placeholders[placeholderIndex]}
               className="w-full bg-transparent text-[15px] text-white placeholder:text-white/70 outline-none"
             />
             <button

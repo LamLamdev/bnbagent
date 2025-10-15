@@ -37,7 +37,7 @@ export default function Sidebar() {
       <div className="flex h-screen flex-col p-4 gap-3">
         <button
           onClick={onNew}
-          className="w-28 rounded-lg ml-5 bg-bnb-yellow mt-6 text-black text-sm font-semibold py-2 hover:opacity-90"
+          className="w-28 rounded-lg ml-5 bg-chinese-red mt-6 text-black text-sm font-semibold py-2 hover:opacity-90"
         >
           + New Chat
         </button>
