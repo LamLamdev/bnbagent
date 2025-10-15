@@ -4,7 +4,7 @@ import Sidebar from '@/components/Sidebar';
 import ConditionalSidebar from '@/components/ConditionalSidebar';
 
 export const metadata = {
-  title: 'BNB Agent AI Terminal',
+  title: 'TutorAI Translate The Meta',
   description: 'BNB-only intelligence terminal',
   icons: {
     icon: '/favmas.png',
