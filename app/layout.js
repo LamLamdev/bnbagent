@@ -3,6 +3,7 @@ import NavTabs from '@/components/NavTabs';
 import Sidebar from '@/components/Sidebar';
 import ConditionalSidebar from '@/components/ConditionalSidebar';
 
+
 export const metadata = {
   title: 'TutorAI - Translate the meta',
   description: 'BNB-only intelligence terminal',
@@ -18,9 +19,16 @@ export default function RootLayout({ children }) {
         <NavTabs />
         <div className="flex">
           <ConditionalSidebar />
-          <main className="flex-1 min-h-screen flex items-start justify-center p-4 md:p-8">
-            {children}
-          </main>
+  <main className="flex-1" style={{ 
+  background: '#000',
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'center',
+  minHeight: 'calc(100vh - 60px)',
+  paddingTop: '120px'
+}}>
+  {children}
+</main>
         </div>
       </body>
     </html>

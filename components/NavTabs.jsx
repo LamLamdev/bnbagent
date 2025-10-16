@@ -6,50 +6,84 @@ import { usePathname } from 'next/navigation';
 const tabs = [
   { href: '/chat', label: 'Chat' },
   { href: '/intel', label: 'Intel' },
-  { href: '/analyzer', label: 'Analyzer' },
+ 
 ];
 
 export default function NavTabs() {
   const pathname = usePathname();
 
   return (
-    <>
-      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
-        <ul className="flex gap-2 rounded-2xl bg-white/5 border border-white/10 p-1 backdrop-blur">
-          {tabs.map(t => {
-            const active = pathname === t.href;
-            return (
-              <li key={t.href}>
-                <Link
-                  href={t.href}
-                  className={`px-3 py-1.5 rounded-xl text-sm transition
-                    ${active
-                      ? 'bg-white text-black'
-                      : 'text-white/80 hover:text-white hover:bg-white/10'}`}
-                >
-                  {t.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+  <nav style={{
+  background: '#0a0a0a',
+  borderBottom: '1px solid #E32E30',
+  padding: '15px 20px',
+  display: 'flex',
+  gap: '20px',
+  alignItems: 'center',
+  justifyContent: 'center',  // ADD THIS LINE
+  fontFamily: "'Courier New', monospace"
+}}>
+      {tabs.map((t) => {
+        const active = pathname === t.href;
+        return (
+          <Link
+            key={t.href}
+            href={t.href}
+            style={{
+              background: active ? '#E32E30' : 'transparent',
+              color: active ? '#000' : '#E32E30',
+              border: '1px solid #E32E30',
+              padding: '8px 16px',
+              fontFamily: "'Courier New', monospace",
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              fontSize: '13px',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+              fontWeight: 'normal'
+            }}
+            onMouseEnter={(e) => {
+              if (!active) {
+                e.target.style.background = '#E32E30';
+                e.target.style.color = '#000';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!active) {
+                e.target.style.background = 'transparent';
+                e.target.style.color = '#E32E30';
+              }
+            }}
+          >
+            {t.label.toUpperCase()}
+          </Link>
+        );
+      })}
 
-      {/* X Logo in top right */}
-      <a 
-        href="https://x.com/trytutorai" 
-        target="_blank" 
+      {/* X logo in top right */}
+      <a
+        href="https://x.com/trytutorai"
+        target="_blank"
         rel="noopener noreferrer"
-        className="fixed top-6 right-6 z-50 hover:opacity-80 transition-opacity"
+        style={{
+          position: 'fixed',
+          top: '16px',
+          right: '20px',
+          zIndex: 50,
+          opacity: 0.8,
+          transition: 'opacity 0.3s'
+        }}
+        onMouseEnter={(e) => e.target.style.opacity = '1'}
+        onMouseLeave={(e) => e.target.style.opacity = '0.8'}
       >
-        <Image 
-          src="/X.png" 
-          alt="Follow us on X" 
-          width={24} 
-          height={24}
-          className="w-6 h-6"
-        />
+       <Image
+  src="/X.png"
+  alt="Follow us on X"
+  width={24}
+  height={24}
+  style={{ width: '28px', height: '28px' }}
+/>
       </a>
-    </>
+    </nav>
   );
 }

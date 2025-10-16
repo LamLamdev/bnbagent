@@ -28,50 +28,138 @@ export default function Sidebar() {
 
   const onRename = (e, id, oldTitle) => {
     e.stopPropagation(); e.preventDefault();
-    const title = prompt('Rename chat:', oldTitle ?? '')?.trim();
+    const title = prompt('Rename chat:', oldTitle ?? '');
     if (title) { renameChat(id, title); refresh(); }
   };
 
   return (
-    <aside className="hidden md:flex md:w-64 shrink-0 border-r border-white/10 bg-black/20">
-      <div className="flex h-screen flex-col p-4 gap-3">
-        <button
-          onClick={onNew}
-          className="w-28 rounded-lg ml-5 bg-chinese-red mt-6 text-black text-sm font-semibold py-2 hover:opacity-90"
-        >
-          + New Chat
-        </button>
+    <aside style={{
+      width: '200px',
+      background: '#0a0a0a',
+      borderRight: '1px solid #E32E30',
+      padding: '20px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+      fontFamily: "'Courier New', monospace"
+    }}>
+      <button
+        onClick={onNew}
+        style={{
+          background: '#E32E30',
+          color: '#000',
+          border: 'none',
+          padding: '10px',
+          fontFamily: "'Courier New', monospace",
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          fontSize: '14px',
+          transition: 'all 0.2s'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = '#FF4444';
+          e.target.style.boxShadow = '0 0 10px #E32E30';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = '#E32E30';
+          e.target.style.boxShadow = 'none';
+        }}
+      >
+        + NEW CHAT
+      </button>
 
-        <div className="overflow-auto pr-1 space-y-1">
-          {chats.length === 0 && (
-            <div className="text-sm text-white/50 px-2 py-3">No chats yet</div>
-          )}
-          {chats.map(c => {
-            const active = pathname === `/chat/${c.id}`;
-            return (
-              <Link
-                key={c.id}
-                href={`/chat/${c.id}`}
-                className={`group flex items-center  justify-between rounded-md px-3 py-2 text-sm
-                  ${active ? 'bg-white/80 text-black' : 'text-white/80 hover:bg-white/10'}`}
-              >
-                <span className="truncate">{c.title || 'Untitled'}</span>
-                <span className="ml-2 flex gap-1 opacity-0 group-hover:opacity-100">
-                  <button
-                    onClick={(e)=>onRename(e, c.id, c.title)}
-                    className="text-xs px-2 py-0.5 rounded bg-white/10 hover:bg-white/20"
-                    title="Rename"
-                  >✎</button>
-                  <button
-                    onClick={(e)=>onDelete(e, c.id)}
-                    className="text-xs px-2 py-0.5 rounded bg-white/10 hover:bg-white/20"
-                    title="Delete"
-                  >✕</button>
-                </span>
-              </Link>
-            );
-          })}
-        </div>
+      <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        {chats.length === 0 && (
+          <div style={{
+            fontSize: '12px',
+            color: '#E32E30',
+            textAlign: 'center',
+            padding: '20px 0'
+          }}>
+            No chats yet.
+          </div>
+        )}
+        {chats.map((c) => {
+          const active = pathname === `/chat/${c.id}`;
+          return (
+            <Link
+              key={c.id}
+              href={`/chat/${c.id}`}
+              style={{
+                background: active ? '#1a1a1a' : '#111',
+                border: '1px solid #E32E30',
+                padding: '8px',
+                fontSize: '12px',
+                color: '#E32E30',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                textDecoration: 'none',
+                display: 'block',
+                position: 'relative'
+              }}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  e.currentTarget.style.background = '#1a1a1a';
+                  e.currentTarget.style.boxShadow = '0 0 5px #E32E30';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  e.currentTarget.style.background = '#111';
+                  e.currentTarget.style.boxShadow = 'none';
+                }
+              }}
+            >
+              <span style={{
+                display: 'block',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                paddingRight: '50px'
+              }}>
+                {c.title || 'Untitled'}
+              </span>
+              <span style={{
+                position: 'absolute',
+                right: '8px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                display: 'flex',
+                gap: '5px',
+                opacity: 0.8
+              }}>
+                <button
+                  onClick={(e) => onRename(e, c.id, c.title)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#E32E30',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    padding: '0 3px'
+                  }}
+                  title="Rename"
+                >
+                  ✎
+                </button>
+                <button
+                  onClick={(e) => onDelete(e, c.id)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#E32E30',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    padding: '0 3px'
+                  }}
+                  title="Delete"
+                >
+                  ×
+                </button>
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </aside>
   );

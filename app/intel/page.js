@@ -496,7 +496,8 @@ const TokenIntelCard = ({ data, loading, error }) => {
             href={searchUrl}
             target="_blank"
             rel="noopener noreferrer"
-className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] text-sm"          >
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] text-sm"
+          >
             <span>🔍</span>
             <span>Search on X</span>
           </a>
@@ -568,52 +569,110 @@ export default function IntelPage() {
   const showAnalyzeButton = contract.trim() && !data && !loading && !error;
 
   // 🟡 check for prebonded (market cap & liquidity = 0)
-const isPreBonded =
+ const isPreBonded =
   data &&
-  (data.mcUSD === 0 || data.mcUSD == null) &&
   (data.liquidityUSD === 0 || data.liquidityUSD == null);
 
   return (
-    <div className="flex justify-center items-start min-h-screen pt-48 gap-6 px-4">
-      <div
-        className="w-full max-w-lg rounded-2xl border border-white/10 bg-[var(--panel)] p-6 shadow-xl"
-        style={{ width: '32rem' }}
-      >
-        <h2 className="text-xl font-semibold mb-4">Token Intel Brief</h2>
+    <div style={{ width: '100%', maxWidth: '32rem' }}>
+      {/* Input Card - Fixed */}
+      <div style={{
+        width: '100%',
+        border: '1px solid #E32E30',
+        background: '#0a0a0a',
+        padding: '24px',
+        fontFamily: "'Courier New', monospace",
+        marginBottom: '16px'
+      }}>
+        <h2 style={{
+          fontSize: '18px',
+          fontWeight: 'bold',
+          marginBottom: '16px',
+          color: '#E32E30',
+          textShadow: '0 0 5px #E32E30'
+        }}>
+          <span style={{ color: '#E32E30' }}>tutorai@bnb:~$</span> TOKEN_INTEL_BRIEF
+        </h2>
 
         <input
           value={contract}
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           placeholder="Paste contract (0x…)"
-          className="w-full bg-transparent border border-white/10 rounded px-3 py-2 mb-4 placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-bnb-yellow"
+          style={{
+            width: '100%',
+            background: '#000',
+            border: '1px solid #E32E30',
+            color: '#E32E30',
+            padding: '12px',
+            marginBottom: '16px',
+            fontFamily: "'Courier New', monospace",
+            fontSize: '14px',
+            outline: 'none'
+          }}
+          onFocus={(e) => e.target.style.boxShadow = '0 0 10px #E32E30'}
+          onBlur={(e) => e.target.style.boxShadow = 'none'}
         />
 
-      {showAnalyzeButton && (
-  <button
-    onClick={() => handleAnalyze(contract)}
-    className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] mb-4 text-sm mx-auto block"
-  >
-    Analyze
-  </button>
-)}
-
-        <div className="min-h-0 text-center">
-          {!contract.trim() && !data && !loading && !error && (
-            <div className="text-bnb-yellow/70 text-sm">
-              Advanced DeFi Risk Analysis
-            </div>
-          )}
-
-          {isPreBonded ? (
-            <div className="text-yellow-400 text-sm p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-              ⚠️ Paste a MIGRATED token contract address to analyze
-            </div>
-          ) : (
-            <TokenIntelCard data={data} loading={loading} error={error} />
-          )}
-        </div>
+        {/* Show pre-bonded warning OR analyze button OR default message */}
+        {isPreBonded ? (
+          <div style={{
+            color: '#FFD700',
+            fontSize: '13px',
+            padding: '12px',
+            background: 'rgba(255, 215, 0, 0.1)',
+            border: '1px solid rgba(255, 215, 0, 0.3)',
+            textAlign: 'center'
+          }}>
+            ⚠️ Please paste a MIGRATED contract address to analyze
+          </div>
+        ) : showAnalyzeButton ? (
+          <button
+            onClick={() => handleAnalyze(contract)}
+            style={{
+              background: '#E32E30',
+              color: '#000',
+              border: 'none',
+              padding: '12px 24px',
+              fontFamily: "'Courier New', monospace",
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '13px',
+              transition: 'all 0.2s',
+              display: 'block',
+              margin: '0 auto'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#FF4444';
+              e.target.style.boxShadow = '0 0 15px #E32E30';
+              e.target.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#E32E30';
+              e.target.style.boxShadow = 'none';
+              e.target.style.transform = 'scale(1)';
+            }}
+          >
+            ANALYZE
+          </button>
+        ) : !contract.trim() && (
+          <div style={{
+            color: '#E32E30',
+            fontSize: '13px',
+            textAlign: 'center',
+            opacity: 0.7
+          }}>
+            Advanced DeFi Risk Analysis
+          </div>
+        )}
       </div>
+
+      {/* Results Card - Only show if NOT pre-bonded and has data */}
+      {data && !isPreBonded && (
+        <div className="w-full rounded-2xl border border-white/10 bg-[var(--panel)] p-6 shadow-xl">
+          <TokenIntelCard data={data} loading={loading} error={error} />
+        </div>
+      )}
     </div>
   );
 }
