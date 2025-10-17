@@ -62,7 +62,7 @@ export default function NavTabs() {
 
       {/* X logo in top right */}
       <a
-        href="https://x.com/trytutorai"
+        href="https://x.com/tutoraibnb"
         target="_blank"
         rel="noopener noreferrer"
         style={{
