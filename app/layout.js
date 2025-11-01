@@ -6,7 +6,7 @@ import ConditionalSidebar from '@/components/ConditionalSidebar';
 
 export const metadata = {
   title: 'SolAgent - Translate the meta',
-  description: 'BNB-only intelligence terminal',
+  description: 'SOLANA-only intelligence terminal',
   icons: {
     icon: '/favmas.png',
   },
