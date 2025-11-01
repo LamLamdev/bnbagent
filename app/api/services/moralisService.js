@@ -7,11 +7,17 @@ class MoralisService {
 
     // Chain mapping for Moralis
     this.chainMapping = {
+      // EVM Chains
       bsc: '0x38',
       ethereum: '0x1',
       polygon: '0x89',
       arbitrum: '0xa4b1',
       avalanche: '0xa86a',
+      // Solana
+      solana: 'mainnet',
+      'solana-mainnet': 'mainnet',
+      'solana-devnet': 'devnet',
+      'solana-testnet': 'testnet',
     };
 
     if (!this.apiKey) {
@@ -22,19 +28,37 @@ class MoralisService {
 
   // Map chain names to Moralis chain IDs
   getChainId(chainId) {
-    const chainName = typeof chainId === 'string' ? chainId.toLowerCase() : 'bsc';
-    return this.chainMapping[chainName] || '0x38'; // Default to BSC
+    const chainName = typeof chainId === 'string' ? chainId.toLowerCase() : 'solana';
+    return this.chainMapping[chainName] || 'mainnet'; // Default to Solana mainnet
+  }
+
+  // Detect if chain is Solana or EVM
+  isSolanaChain(chainId) {
+    const chain = this.getChainId(chainId);
+    return chain === 'mainnet' || chain === 'devnet' || chain === 'testnet';
   }
 
   // Get token holders (list of owners) — ARRAY
-  async getTokenHolders(contractAddress, chainId = 'bsc', limit = 100, cursor) {
+  async getTokenHolders(contractAddress, chainId = 'solana', limit = 100, cursor) {
     try {
       const chain = this.getChainId(chainId);
-      const url = new URL(`${this.baseUrl}/erc20/${contractAddress}/owners`);
-      url.searchParams.set('chain', chain);
-      url.searchParams.set('limit', String(limit));
-      url.searchParams.set('order', 'DESC');
-      if (cursor) url.searchParams.set('cursor', cursor);
+      const isSolana = this.isSolanaChain(chainId);
+
+      let url;
+      if (isSolana) {
+        // Solana endpoint: /nft/{network}/{address}/owners
+        // OR token endpoint if available
+        url = new URL(`${this.baseUrl.replace('v2.2', 'v2')}/token/${chain}/${contractAddress}/owners`);
+        url.searchParams.set('limit', String(limit));
+        if (cursor) url.searchParams.set('cursor', cursor);
+      } else {
+        // EVM endpoint
+        url = new URL(`${this.baseUrl}/erc20/${contractAddress}/owners`);
+        url.searchParams.set('chain', chain);
+        url.searchParams.set('limit', String(limit));
+        url.searchParams.set('order', 'DESC');
+        if (cursor) url.searchParams.set('cursor', cursor);
+      }
 
       console.log(`Moralis: Getting token holders for ${contractAddress} on chain ${chain}`);
       console.log(`Moralis URL: ${url.toString()}`);
@@ -71,12 +95,21 @@ class MoralisService {
   }
 
   // Get token holder stats/summary — OBJECT
-  async getTokenHolderStats(contractAddress, chainId = 'bsc') {
+  async getTokenHolderStats(contractAddress, chainId = 'solana') {
     try {
       const chain = this.getChainId(chainId);
-      // Stats are on /holders (no /stats suffix)
-      const url = new URL(`${this.baseUrl}/erc20/${contractAddress}/holders`);
-      url.searchParams.set('chain', chain);
+      const isSolana = this.isSolanaChain(chainId);
+
+      let url;
+      if (isSolana) {
+        // Solana: may need different endpoint or use holders count from owners
+        // For now, try the token metadata endpoint which includes holder count
+        url = new URL(`${this.baseUrl.replace('v2.2', 'v2')}/token/${chain}/${contractAddress}/metadata`);
+      } else {
+        // EVM: Stats are on /holders (no /stats suffix)
+        url = new URL(`${this.baseUrl}/erc20/${contractAddress}/holders`);
+        url.searchParams.set('chain', chain);
+      }
 
       console.log(`Moralis: Getting token holder stats for ${contractAddress}`);
 
@@ -112,9 +145,10 @@ class MoralisService {
   }
 
   // Get complete holder analysis - combines holders + stats
-  async getCompleteHolderAnalysis(contractAddress, chainId = 'bsc') {
+  async getCompleteHolderAnalysis(contractAddress, chainId = 'solana') {
     try {
       console.log(`Getting complete holder analysis from Moralis for ${contractAddress}...`);
+      const isSolana = this.isSolanaChain(chainId);
 
       // Get holders and stats in parallel
       const [holdersData, statsData] = await Promise.all([
@@ -125,6 +159,7 @@ class MoralisService {
       console.log('Moralis results:', {
         holdersLength: holdersData?.length,
         statsData: statsData ? 'Available' : 'Not Available',
+        chainType: isSolana ? 'Solana' : 'EVM',
       });
 
       if (!holdersData && !statsData) {
@@ -139,38 +174,67 @@ class MoralisService {
       }
 
       // Extract holder count from stats or estimate from holders list
-      const holderCount = statsData?.totalHolders || holdersData?.length || 0;
+      let holderCount;
+      if (isSolana) {
+        // For Solana, holder count might be in metadata or we use holders array length
+        holderCount = statsData?.holders || statsData?.holderCount || holdersData?.length || 0;
+      } else {
+        holderCount = statsData?.totalHolders || holdersData?.length || 0;
+      }
 
-      // Process holder data
+      // Process holder data - handle both Solana and EVM formats
       const topHolders = holdersData
-        ? holdersData.map((holder) => ({
-            address: holder.owner_address || holder.address,
-            balance: holder.balance_formatted || holder.balance,
-            balanceRaw: holder.balance,
-            percentage: parseFloat(holder.percentage_relative_to_total_supply || 0),
-            usdValue: holder.usd_value || null,
-            isContract:
-              holder.is_contract === true ||
-              (holder.owner_address_label && holder.owner_address_label.includes('contract')) ||
-              false,
-          }))
+        ? holdersData.map((holder) => {
+            if (isSolana) {
+              // Solana format
+              return {
+                address: holder.owner || holder.address,
+                balance: holder.amount_formatted || holder.amount || holder.balance_formatted,
+                balanceRaw: holder.amount || holder.balance,
+                percentage: parseFloat(holder.percentage || holder.share || 0),
+                usdValue: holder.usd_value || holder.value_usd || null,
+                isContract: false, // Solana doesn't have contract distinction like EVM
+              };
+            } else {
+              // EVM format
+              return {
+                address: holder.owner_address || holder.address,
+                balance: holder.balance_formatted || holder.balance,
+                balanceRaw: holder.balance,
+                percentage: parseFloat(holder.percentage_relative_to_total_supply || 0),
+                usdValue: holder.usd_value || null,
+                isContract:
+                  holder.is_contract === true ||
+                  (holder.owner_address_label && holder.owner_address_label.includes('contract')) ||
+                  false,
+              };
+            }
+          })
         : [];
 
       // Calculate percentages from actual holder data
       const sumPct = (arr) => arr.reduce((sum, h) => sum + (isFinite(h.percentage) ? h.percentage : 0), 0);
       const top3Combined = sumPct(topHolders.slice(0, 3));
       const top10Combined = sumPct(topHolders.slice(0, 10));
-      const top20Combined = sumPct(topHolders.slice(0, 10));
+      const top20Combined = sumPct(topHolders.slice(0, 20));
 
-      // Estimate dev wallets (contracts + large early holders)
-      const contractHolders = topHolders.filter((h) => h.isContract).length;
-      const largeHolders = topHolders.filter((h) => h.percentage > 1).length;
-      const devWalletsEstimate = contractHolders + Math.floor(largeHolders * 0.6); // heuristic
+      // Estimate dev wallets
+      let devWalletsEstimate;
+      if (isSolana) {
+        // For Solana, estimate based on large holders (no contract distinction)
+        const largeHolders = topHolders.filter((h) => h.percentage > 1).length;
+        devWalletsEstimate = Math.floor(largeHolders * 0.4); // More conservative for Solana
+      } else {
+        // For EVM, use contract holders + large holders
+        const contractHolders = topHolders.filter((h) => h.isContract).length;
+        const largeHolders = topHolders.filter((h) => h.percentage > 1).length;
+        devWalletsEstimate = contractHolders + Math.floor(largeHolders * 0.6);
+      }
 
       return {
         totalHolders: holderCount,
         devWallets: devWalletsEstimate,
-        topHolders: topHolders.slice(0, 10), // Top 20 holders
+        topHolders: topHolders.slice(0, 20), // Top 20 holders
         percentages: {
           top3Combined: Math.round(top3Combined * 100) / 100,
           top10Combined: Math.round(top10Combined * 100) / 100,
@@ -185,6 +249,7 @@ class MoralisService {
             : 'Limited',
         isEstimated: false, // Real data from Moralis
         dataSource: 'Moralis',
+        chainType: isSolana ? 'Solana' : 'EVM',
         rawData: {
           stats: statsData,
           holdersCount: holdersData?.length || 0,
@@ -204,12 +269,23 @@ class MoralisService {
   }
 
   // Test API connection
-  async testConnection() {
+  async testConnection(chainId = 'solana') {
     try {
-      // Test with a known BSC token (CAKE) — use /owners (array)
-      const testUrl = `${this.baseUrl}/erc20/0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82/owners?chain=0x38&limit=5&order=DESC`;
+      const isSolana = this.isSolanaChain(chainId);
+      
+      let testUrl;
+      if (isSolana) {
+        // Test with a known Solana token (BONK)
+        const chain = this.getChainId(chainId);
+        testUrl = `${this.baseUrl.replace('v2.2', 'v2')}/token/${chain}/DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263/owners?limit=5`;
+      } else {
+        // Test with a known BSC token (CAKE)
+        testUrl = `${this.baseUrl}/erc20/0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82/owners?chain=0x38&limit=5&order=DESC`;
+      }
+
       console.log('Testing Moralis connection...');
       console.log('Test URL:', testUrl);
+      console.log('Chain type:', isSolana ? 'Solana' : 'EVM');
 
       const response = await fetch(testUrl, {
         method: 'GET',
@@ -233,6 +309,7 @@ class MoralisService {
         ok: response.ok,
         dataReceived: !!data.result,
         resultLength: data.result?.length || 0,
+        chainType: isSolana ? 'Solana' : 'EVM',
       });
 
       return response.ok && Array.isArray(data.result) && data.result.length > 0;
@@ -243,10 +320,19 @@ class MoralisService {
   }
 
   // Get token metadata
-  async getTokenMetadata(contractAddress, chainId = 'bsc') {
+  async getTokenMetadata(contractAddress, chainId = 'solana') {
     try {
       const chain = this.getChainId(chainId);
-      const url = `${this.baseUrl}/erc20/${contractAddress}?chain=${chain}`;
+      const isSolana = this.isSolanaChain(chainId);
+
+      let url;
+      if (isSolana) {
+        // Solana token metadata endpoint
+        url = `${this.baseUrl.replace('v2.2', 'v2')}/token/${chain}/${contractAddress}/metadata`;
+      } else {
+        // EVM token metadata endpoint
+        url = `${this.baseUrl}/erc20/${contractAddress}?chain=${chain}`;
+      }
 
       const response = await fetch(url, {
         method: 'GET',
@@ -265,6 +351,60 @@ class MoralisService {
       return data;
     } catch (error) {
       console.error('Error getting token metadata from Moralis:', error);
+      return null;
+    }
+  }
+
+  // Get Solana token price (specific to Solana)
+  async getSolanaTokenPrice(contractAddress) {
+    try {
+      const chain = this.getChainId('solana');
+      const url = `${this.baseUrl.replace('v2.2', 'v2')}/token/${chain}/${contractAddress}/price`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          'X-API-Key': this.apiKey,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting Solana token price from Moralis:', error);
+      return null;
+    }
+  }
+
+  // Get Solana NFT metadata (if token is an NFT)
+  async getSolanaNFTMetadata(contractAddress) {
+    try {
+      const chain = this.getChainId('solana');
+      const url = `${this.baseUrl.replace('v2.2', 'v2')}/nft/${chain}/${contractAddress}/metadata`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          'X-API-Key': this.apiKey,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting Solana NFT metadata from Moralis:', error);
       return null;
     }
   }

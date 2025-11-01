@@ -15,7 +15,7 @@ export default function NavTabs() {
   return (
   <nav style={{
   background: '#0a0a0a',
-  borderBottom: '1px solid #E32E30',
+  borderBottom: '1px solid #8c52ff',
   padding: '15px 20px',
   display: 'flex',
   gap: '20px',
@@ -30,9 +30,9 @@ export default function NavTabs() {
             key={t.href}
             href={t.href}
             style={{
-              background: active ? '#E32E30' : 'transparent',
-              color: active ? '#000' : '#E32E30',
-              border: '1px solid #E32E30',
+              background: active ? '#8c52ff' : 'transparent',
+              color: active ? '#000' : '#8c52ff',
+              border: '1px solid #8c52ff',
               padding: '8px 16px',
               fontFamily: "'Courier New', monospace",
               cursor: 'pointer',
@@ -44,14 +44,14 @@ export default function NavTabs() {
             }}
             onMouseEnter={(e) => {
               if (!active) {
-                e.target.style.background = '#E32E30';
+                e.target.style.background = '#8c52ff';
                 e.target.style.color = '#000';
               }
             }}
             onMouseLeave={(e) => {
               if (!active) {
                 e.target.style.background = 'transparent';
-                e.target.style.color = '#E32E30';
+                e.target.style.color = '#8c52ff';
               }
             }}
           >
@@ -62,7 +62,7 @@ export default function NavTabs() {
 
       {/* X logo in top right */}
       <a
-        href="https://x.com/tutoraibnb"
+        href="https://x.com/trysolagent"
         target="_blank"
         rel="noopener noreferrer"
         style={{

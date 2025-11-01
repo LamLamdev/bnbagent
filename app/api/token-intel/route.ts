@@ -2,7 +2,7 @@
 // @ts-nocheck
 
 import { TokenIntelligenceService } from '../services/tokenIntelService.ts';
-import MoralisService from '../services/moralisService.js';
+import HeliusService from '../services/heliusService.js'; // Changed from Moralis
 
 // simple prebond detector: no liq + no mc + (no price OR no activity)
 function isLikelyPrebond(intel: any) {
@@ -14,13 +14,13 @@ function isLikelyPrebond(intel: any) {
   );
 }
 
-// Initialize Moralis service with environment variable
-const moralis = new MoralisService();
+// Initialize Helius service with environment variable
+const helius = new HeliusService(process.env.HELIUS_API_KEY);
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { tokenAddress, chainId = 'bsc' } = body;
+    const { tokenAddress, chainId = 'solana' } = body;
 
     // Validate input
     if (!tokenAddress) {
@@ -30,10 +30,10 @@ export async function POST(request) {
       );
     }
 
-    // Validate address format
-    if (!/^0x[a-fA-F0-9]{40}$/.test(tokenAddress)) {
+    // Validate Solana address format (base58, 32-44 characters)
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(tokenAddress)) {
       return Response.json(
-        { error: 'Invalid token address format' },
+        { error: 'Invalid Solana token address format' },
         { status: 400 }
       );
     }
@@ -42,33 +42,33 @@ export async function POST(request) {
     const tokenIntel = new TokenIntelligenceService();
 
     // Get token intelligence data and holder analysis in parallel
-    console.log(`Analyzing token ${tokenAddress} with Moralis holder data...`);
+    console.log(`Analyzing Solana token ${tokenAddress} with Helius holder data...`);
     
     const [intelData, holderAnalysis] = await Promise.all([
       tokenIntel.getCompleteTokenIntel(tokenAddress, chainId),
-      moralis.getCompleteHolderAnalysis(tokenAddress, chainId)
+      helius.getCompleteHolderAnalysis(tokenAddress) // Using Helius instead of Moralis
     ]);
 
     // Add logging here:
     console.log('Raw intel data before transform:', intelData);
-    console.log('Moralis holder analysis data:', holderAnalysis);
+    console.log('Helius holder analysis data:', holderAnalysis);
 
     if (isLikelyPrebond(intelData)) {
-  return Response.json({
-    success: true,
-    data: {
-      isPrebond: true,
-      prebondReason: 'No liquidity/market data (likely pre-bonded).',
-      tokenName: intelData?.tokenName || 'Unknown Token',
-      symbol: intelData?.symbol || 'UNKNOWN',
-      contract: tokenAddress,
-      chain: 'BNB',
-      analyzedAt: new Date().toISOString(),
-    },
-  });
-}
+      return Response.json({
+        success: true,
+        data: {
+          isPrebond: true,
+          prebondReason: 'No liquidity/market data (likely pre-bonded).',
+          tokenName: intelData?.tokenName || 'Unknown Token',
+          symbol: intelData?.symbol || 'UNKNOWN',
+          contract: tokenAddress,
+          chain: 'Solana',
+          analyzedAt: new Date().toISOString(),
+        },
+      });
+    }
     
-    // Transform data to match frontend format (now with real holder data from Moralis)
+    // Transform data to match frontend format (now with real holder data from Helius)
     const formattedData = transformToFrontendFormat(intelData, holderAnalysis);
     
     console.log('Formatted data after transform:', formattedData);
@@ -84,14 +84,14 @@ export async function POST(request) {
     // Handle specific error types
     if (error.message.includes('Invalid token address')) {
       return Response.json(
-        { error: 'Invalid token address format' },
+        { error: 'Invalid Solana token address format' },
         { status: 400 }
       );
     }
 
     if (error.message.includes('Token not found')) {
       return Response.json(
-        { error: 'Token not found on supported platforms' },
+        { error: 'Token not found on Solana' },
         { status: 404 }
       );
     }
@@ -114,7 +114,7 @@ export async function POST(request) {
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const tokenAddress = searchParams.get('address');
-  const chainId = searchParams.get('chain') || 'bsc';
+  const chainId = searchParams.get('chain') || 'solana';
 
   if (!tokenAddress) {
     return Response.json(
@@ -131,7 +131,7 @@ export async function GET(request) {
 
 /**
  * Transform API response to match frontend mock data format
- * Now includes Moralis real holder analysis data
+ * Now includes Helius real holder analysis data
  */
 function transformToFrontendFormat(intelData, holderAnalysis) {
   // Handle case where token wasn't found
@@ -141,11 +141,11 @@ function transformToFrontendFormat(intelData, holderAnalysis) {
       tokenName: 'Unknown Token',
       symbol: 'UNKNOWN',
       contract: intelData.contract,
-      chain: 'BNB'
+      chain: 'Solana'
     };
   }
 
-  // Handle Moralis holder data
+  // Handle Helius holder data
   const hasRealHolderData = holderAnalysis && !holderAnalysis.error && holderAnalysis.totalHolders > 0;
   const holderDataQuality = holderAnalysis?.dataQuality || 'Limited';
   
@@ -160,7 +160,7 @@ function transformToFrontendFormat(intelData, holderAnalysis) {
     contract: intelData.contract,
     chain: intelData.chain,
 
-    // Safety & Risk Assessment (enhanced with Moralis data)
+    // Safety & Risk Assessment (enhanced with Helius data)
     safetyScore: basicSafetyScore,
     bundlersPct: hasRealHolderData ? calculateBundlersFromHolders(holderAnalysis) : 
                  intelData.riskAssessment?.bundlers || null,
@@ -172,15 +172,15 @@ function transformToFrontendFormat(intelData, holderAnalysis) {
     liquidityUSD: intelData.liquidity || null,
     volume24hUSD: intelData.volume24h || null,
     
-    // Trading taxes (placeholder - requires contract analysis)
+    // Trading taxes (Solana has no taxes typically, but keeping for compatibility)
     buyTaxPct: intelData.taxes?.buy || null,
     sellTaxPct: intelData.taxes?.sell || null,
     buyTaxGas: intelData.taxes?.buyGas || null,
     sellTaxGas: intelData.taxes?.sellGas || null,
   
     // Liquidity info (placeholder)
-    lpLockPct: null, // Requires lock analysis
-    lpLockDest: null, // Requires lock analysis
+    lpLockPct: null,
+    lpLockDest: null,
 
     // Token Age
     ageMinutes: intelData.tokenAge,
@@ -188,31 +188,29 @@ function transformToFrontendFormat(intelData, holderAnalysis) {
     // Social Links
     links: intelData.social || {},
 
-    // REAL Holder Analysis from Moralis
-    // inside the returned object:
-holders: {
-  total: hasRealHolderData ? holderAnalysis.totalHolders : null,
-  top3: hasRealHolderData ? holderAnalysis.topHolders?.slice(0, 3) || [] : [],
-  top10Pct: hasRealHolderData ? holderAnalysis.percentages?.top10Combined : null,
-  top3Pct: hasRealHolderData ? holderAnalysis.percentages?.top3Combined : null,
-  devTokens: hasRealHolderData ? holderAnalysis.devWallets : null,
-  devSold: false,
-  distribution: hasRealHolderData ? analyzeHolderDistribution(holderAnalysis) : 'Unknown',
-  riskLevel: hasRealHolderData ? calculateHolderRiskLevel(holderAnalysis) : 'Unknown',
-  dataQuality: holderDataQuality,
-  isEstimated: holderAnalysis?.isEstimated || false,
-  dataSource: 'Moralis',
+    // REAL Holder Analysis from Helius
+    holders: {
+      total: hasRealHolderData ? holderAnalysis.totalHolders : null,
+      top3: hasRealHolderData ? holderAnalysis.topHolders?.slice(0, 3) || [] : [],
+      top10Pct: hasRealHolderData ? holderAnalysis.percentages?.top10Combined : null,
+      top3Pct: hasRealHolderData ? holderAnalysis.percentages?.top3Combined : null,
+      devTokens: hasRealHolderData ? holderAnalysis.devWallets : null,
+      devSold: false,
+      distribution: hasRealHolderData ? analyzeHolderDistribution(holderAnalysis) : 'Unknown',
+      riskLevel: hasRealHolderData ? calculateHolderRiskLevel(holderAnalysis) : 'Unknown',
+      dataQuality: holderDataQuality,
+      isEstimated: holderAnalysis?.isEstimated || false,
+      dataSource: 'Helius',
 
-  // NEW: feed the UI directly
-  topHolders: hasRealHolderData ? (holderAnalysis.topHolders || []) : [],
-  categories: holderAnalysis?.rawData?.stats?.holderDistribution || null
-},
+      // Feed the UI directly
+      topHolders: hasRealHolderData ? (holderAnalysis.topHolders || []) : [],
+      categories: holderAnalysis?.rawData?.stats?.holderDistribution || null
+    },
 
-
-    // Four Meme Specific Data
+    // Pump.fun / Raydium Specific Data
     bondingCurveProgress: intelData.bondingCurveProgress,
     migrationStatus: intelData.migrationStatus,
-    isFourMemeToken: intelData.isFourMemeToken,
+    isPumpFunToken: intelData.isPumpFunToken || false,
 
     // Additional Trading Data
     trades24h: intelData.trades24h,
@@ -226,10 +224,10 @@ holders: {
     // Metadata
     tokenType: intelData.tokenType,
     dataSources: Array.isArray(intelData.dataSources) 
-      ? [...intelData.dataSources, 'Moralis']
+      ? [...intelData.dataSources, 'Helius']
       : typeof intelData.dataSources === 'object' 
-        ? [...(intelData.dataSources.available || []), 'Moralis']
-        : ['Moralis'],
+        ? [...(intelData.dataSources.available || []), 'Helius']
+        : ['Helius'],
     
     // Timestamp
     analyzedAt: new Date().toISOString()
@@ -237,7 +235,7 @@ holders: {
 }
 
 /**
- * Calculate holder-based risk score using real Moralis data
+ * Calculate holder-based risk score using real Helius data
  */
 function calculateHolderRiskScore(holderAnalysis) {
   if (!holderAnalysis || holderAnalysis.error || holderAnalysis.totalHolders === 0) return null;
@@ -249,16 +247,16 @@ function calculateHolderRiskScore(holderAnalysis) {
 
   // Dev wallets risk (0-25 points)
   const devRatio = devWallets / totalHolders;
-  if (devRatio > 0.1) riskScore += 25; // More than 10% dev wallets
-  else if (devRatio > 0.05) riskScore += 15; // 5-10% dev wallets
-  else if (devRatio > 0.02) riskScore += 10; // 2-5% dev wallets
+  if (devRatio > 0.1) riskScore += 25;
+  else if (devRatio > 0.05) riskScore += 15;
+  else if (devRatio > 0.02) riskScore += 10;
 
   // Concentration risk based on actual percentages (0-40 points)
-  if (top10Percent > 80) riskScore += 40; // Extreme concentration
-  else if (top10Percent > 60) riskScore += 30; // High concentration
-  else if (top10Percent > 40) riskScore += 20; // Medium concentration
-  else if (top10Percent > 25) riskScore += 10; // Some concentration
-  else if (top10Percent > 15) riskScore += 5; // Low concentration
+  if (top10Percent > 80) riskScore += 40;
+  else if (top10Percent > 60) riskScore += 30;
+  else if (top10Percent > 40) riskScore += 20;
+  else if (top10Percent > 25) riskScore += 10;
+  else if (top10Percent > 15) riskScore += 5;
 
   // Total holders risk (0-25 points)
   if (totalHolders < 50) riskScore += 25;
@@ -269,47 +267,37 @@ function calculateHolderRiskScore(holderAnalysis) {
   // Single holder dominance risk (0-10 points)
   if (topHolders.length > 0) {
     const topHolderPercent = topHolders[0]?.percentage || 0;
-    if (topHolderPercent > 50) riskScore += 10; // Single holder owns majority
-    else if (topHolderPercent > 25) riskScore += 5; // Single holder owns quarter
+    if (topHolderPercent > 50) riskScore += 10;
+    else if (topHolderPercent > 25) riskScore += 5;
   }
 
   return Math.max(0, Math.min(100, Math.round(riskScore)));
 }
 
 /**
- * Estimate bundlers percentage from real Moralis holder patterns
+ * Estimate bundlers percentage from real Helius holder patterns
  */
 function calculateBundlersFromHolders(holderAnalysis) {
   if (!holderAnalysis || holderAnalysis.error || holderAnalysis.totalHolders === 0) return null;
   
   const { devWallets = 0, totalHolders = 0, topHolders = [] } = holderAnalysis;
   
-  // Calculate dev wallet ratio
   const devRatio = (devWallets / totalHolders) * 100;
-  
-  // Look at top holder patterns for bundling indicators
-  const contractHolders = topHolders.filter(holder => holder.isContract).length;
   const largeHolders = topHolders.filter(holder => holder.percentage > 1).length;
   
-  // Base bundling estimate from dev ratio
   let bundlingEstimate = 0;
   if (devRatio > 15) bundlingEstimate = Math.min(60, devRatio * 2.5);
   else if (devRatio > 10) bundlingEstimate = Math.min(40, devRatio * 2);
   else if (devRatio > 5) bundlingEstimate = Math.min(25, devRatio * 1.5);
   else bundlingEstimate = Math.max(0, devRatio);
   
-  // Adjust based on contract holders (contracts often indicate bundling)
-  if (contractHolders > 5) bundlingEstimate += 10;
-  else if (contractHolders > 2) bundlingEstimate += 5;
-  
-  // Adjust based on large holder count
   if (largeHolders > 10) bundlingEstimate += 5;
   
   return Math.round(Math.min(100, bundlingEstimate));
 }
 
 /**
- * Analyze holder distribution pattern with real Moralis data
+ * Analyze holder distribution pattern with real Helius data
  */
 function analyzeHolderDistribution(holderAnalysis) {
   if (!holderAnalysis || holderAnalysis.error || holderAnalysis.totalHolders === 0) return 'Unknown';
@@ -317,7 +305,6 @@ function analyzeHolderDistribution(holderAnalysis) {
   const { totalHolders = 0, percentages = {} } = holderAnalysis;
   const top10Percent = percentages.top10Combined || 0;
 
-  // More precise distribution analysis with real data
   if (totalHolders < 50) return 'Very Concentrated';
   else if (totalHolders < 200 || top10Percent > 70) return 'Concentrated';
   else if (totalHolders < 500 || top10Percent > 50) return 'Moderately Concentrated';
@@ -328,7 +315,7 @@ function analyzeHolderDistribution(holderAnalysis) {
 }
 
 /**
- * Calculate holder risk level using real Moralis data
+ * Calculate holder risk level using real Helius data
  */
 function calculateHolderRiskLevel(holderAnalysis) {
   const riskScore = calculateHolderRiskScore(holderAnalysis);
@@ -342,10 +329,10 @@ function calculateHolderRiskLevel(holderAnalysis) {
 }
 
 /**
- * Calculate a basic safety score enhanced with real Moralis holder data
+ * Calculate a basic safety score enhanced with real Helius holder data
  */
 function calculateBasicSafetyScore(intelData, holderAnalysis) {
-  let score = 50; // Base score
+  let score = 50;
 
   // Market indicators
   if (intelData.liquidity > 100000) score += 15;
@@ -359,15 +346,14 @@ function calculateBasicSafetyScore(intelData, holderAnalysis) {
   else if (intelData.volume24h > 1000) score += 4;
   
   if (intelData.social && Object.keys(intelData.social).length > 0) score += 8;
-  if (intelData.tokenAge > 2880) score += 12; // > 48 hours
-  else if (intelData.tokenAge > 1440) score += 8; // > 24 hours
+  if (intelData.tokenAge > 2880) score += 12;
+  else if (intelData.tokenAge > 1440) score += 8;
 
-  // Real Moralis holder analysis impact
+  // Real Helius holder analysis impact
   if (holderAnalysis && !holderAnalysis.error && holderAnalysis.totalHolders > 0) {
     const { totalHolders = 0, percentages = {} } = holderAnalysis;
     const top10Percent = percentages.top10Combined || 0;
     
-    // Holder count bonus
     if (totalHolders > 10000) score += 20;
     else if (totalHolders > 5000) score += 18;
     else if (totalHolders > 2000) score += 15;
@@ -376,19 +362,18 @@ function calculateBasicSafetyScore(intelData, holderAnalysis) {
     else if (totalHolders > 200) score += 5;
     else if (totalHolders > 100) score += 3;
     
-    // Distribution impact - real percentages
-    if (top10Percent < 10) score += 20; // Excellent distribution
-    else if (top10Percent < 20) score += 15; // Very good distribution
-    else if (top10Percent < 30) score += 10; // Good distribution
-    else if (top10Percent < 50) score += 5; // Fair distribution
-    else if (top10Percent > 80) score -= 25; // Very poor distribution
-    else if (top10Percent > 60) score -= 15; // Poor distribution
+    if (top10Percent < 10) score += 20;
+    else if (top10Percent < 20) score += 15;
+    else if (top10Percent < 30) score += 10;
+    else if (top10Percent < 50) score += 5;
+    else if (top10Percent > 80) score -= 25;
+    else if (top10Percent > 60) score -= 15;
   }
 
-  // Four Meme adjustments
-  if (intelData.isFourMemeToken) {
+  // Pump.fun adjustments
+  if (intelData.isPumpFunToken) {
     if (intelData.bondingCurveProgress > 50) score += 5;
-    if (intelData.migrationStatus === 'Completed') score += 10;
+    if (intelData.migrationStatus === 'Graduated') score += 10;
   }
 
   return Math.max(0, Math.min(100, Math.round(score)));

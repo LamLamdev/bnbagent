@@ -36,7 +36,7 @@ export default function Sidebar() {
     <aside style={{
       width: '200px',
       background: '#0a0a0a',
-      borderRight: '1px solid #E32E30',
+      borderRight: '1px solid #8c52ff',
       padding: '20px',
       display: 'flex',
       flexDirection: 'column',
@@ -46,7 +46,7 @@ export default function Sidebar() {
       <button
         onClick={onNew}
         style={{
-          background: '#E32E30',
+          background: '#8c52ff',
           color: '#000',
           border: 'none',
           padding: '10px',
@@ -57,11 +57,11 @@ export default function Sidebar() {
           transition: 'all 0.2s'
         }}
         onMouseEnter={(e) => {
-          e.target.style.background = '#FF4444';
-          e.target.style.boxShadow = '0 0 10px #E32E30';
+          e.target.style.background = '#8c52ff';
+          e.target.style.boxShadow = '0 0 10px #8c52ff';
         }}
         onMouseLeave={(e) => {
-          e.target.style.background = '#E32E30';
+          e.target.style.background = '#8c52ff';
           e.target.style.boxShadow = 'none';
         }}
       >
@@ -72,7 +72,7 @@ export default function Sidebar() {
         {chats.length === 0 && (
           <div style={{
             fontSize: '12px',
-            color: '#E32E30',
+            color: '#8c52ff',
             textAlign: 'center',
             padding: '20px 0'
           }}>
@@ -87,10 +87,10 @@ export default function Sidebar() {
               href={`/chat/${c.id}`}
               style={{
                 background: active ? '#1a1a1a' : '#111',
-                border: '1px solid #E32E30',
+                border: '1px solid #8c52ff',
                 padding: '8px',
                 fontSize: '12px',
-                color: '#E32E30',
+                color: '#8c52ff',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 textDecoration: 'none',
@@ -100,7 +100,7 @@ export default function Sidebar() {
               onMouseEnter={(e) => {
                 if (!active) {
                   e.currentTarget.style.background = '#1a1a1a';
-                  e.currentTarget.style.boxShadow = '0 0 5px #E32E30';
+                  e.currentTarget.style.boxShadow = '0 0 5px #8c52ff';
                 }
               }}
               onMouseLeave={(e) => {
@@ -133,7 +133,7 @@ export default function Sidebar() {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#E32E30',
+                    color: '#8c52ff',
                     cursor: 'pointer',
                     fontSize: '12px',
                     padding: '0 3px'
@@ -147,7 +147,7 @@ export default function Sidebar() {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#E32E30',
+                    color: '#8c52ff',
                     cursor: 'pointer',
                     fontSize: '12px',
                     padding: '0 3px'

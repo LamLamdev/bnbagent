@@ -14,10 +14,10 @@ export default function Terminal({ startInHero = true, sessionId }) {
   // Cycling placeholders
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const placeholders = [
-    'Ask TutorAI: "What does 龙币 mean?"',
-    'Ask TutorAI: "Translate this token name — 悟空."',
-    'Ask TutorAI: "Explain the meaning of 发财."',
-    'Ask TutorAI: "What\'s trending in the Chinese meta?"'
+     'Ask SolAgent: "Analyze the top holders"',
+  'Ask SolAgent: "What does the liquidity tell us?"',
+  'Ask SolAgent: "Is this token bundled?"',
+  'Ask SolAgent: "What\'s trending on Solana today?"',
   ];
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function Terminal({ startInHero = true, sessionId }) {
         width: '100%', 
         height: '100vh', 
         background: '#000', 
-        color: '#E32E30',
+        color: '#8c52ff',
         fontFamily: "'Courier New', monospace",
         position: 'relative'
       }}>
@@ -120,18 +120,18 @@ export default function Terminal({ startInHero = true, sessionId }) {
             className="object-contain"
           />
           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center' }}>
-            <span style={{ color: '#E32E30', textShadow: '0 0 10px #E32E30' }}>Tutor</span>
-            <span style={{ color: 'white' }}>AI</span>
+            <span style={{ color: '#8c52ff', textShadow: '0 0 10px #8c52ff' }}>Sol</span>
+            <span style={{ color: 'white' }}>Agent</span>
           </h1>
           <div style={{ fontSize: '13px', marginTop: '10px' }}>
-            <span style={{ color: '#E32E30', textShadow: '0 0 5px #E32E30' }}>tutorai@bnb:~$</span> system ready
+            <span style={{ color: '#8c52ff', textShadow: '0 0 5px #8c52ff' }}>solagent@sol:~$</span> system ready
           </div>
         </div>
 
         <div className="fixed left-1/2 top-[565px] -translate-x-1/2 w-[92vw] max-w-3xl z-10">
           <div style={{
             background: '#0a0a0a',
-            border: '1px solid #E32E30',
+            border: '1px solid #8c52ff',
             borderRadius: '0',
             padding: '20px',
             display: 'flex',
@@ -146,8 +146,8 @@ export default function Terminal({ startInHero = true, sessionId }) {
                 style={{
                   flex: 1,
                   background: '#000',
-                  border: '1px solid #E32E30',
-                  color: '#E32E30',
+                  border: '1px solid #8c52ff',
+                  color: '#8c52ff',
                   padding: '12px',
                   fontFamily: "'Courier New', monospace",
                   fontSize: '14px',
@@ -157,7 +157,7 @@ export default function Terminal({ startInHero = true, sessionId }) {
               <button
                 type="submit"
                 style={{
-                  background: '#E32E30',
+                  background: '#8c52ff',
                   color: '#000',
                   border: 'none',
                   padding: '12px 24px',
@@ -168,12 +168,12 @@ export default function Terminal({ startInHero = true, sessionId }) {
                   transition: 'all 0.2s'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = '#FF4444';
-                  e.target.style.boxShadow = '0 0 15px #E32E30';
+                  e.target.style.background = '#8c52ff';
+                  e.target.style.boxShadow = '0 0 15px #8c52ff';
                   e.target.style.transform = 'scale(1.05)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = '#E32E30';
+                  e.target.style.background = '#8c52ff';
                   e.target.style.boxShadow = 'none';
                   e.target.style.transform = 'scale(1)';
                 }}
@@ -221,13 +221,13 @@ export default function Terminal({ startInHero = true, sessionId }) {
         {messages.length === 0 && (
           <>
             <div style={{ marginBottom: '15px', lineHeight: 1.6 }}>
-              <span style={{ color: '#E32E30', textShadow: '0 0 5px #E32E30' }}>tutorai@bnb:~$</span> initializing...
+              <span style={{ color: '#8c52ff', textShadow: '0 0 5px #8c52ff' }}>solagent@sol:~$</span> initializing...
             </div>
             <div style={{ marginBottom: '15px', lineHeight: 1.6 }}>
-              <span style={{ color: '#E32E30', textShadow: '0 0 5px #E32E30' }}>tutorai@bnb:~$</span> system ready
+              <span style={{ color: '#8c52ff', textShadow: '0 0 5px #8c52ff' }}>solagent@sol:~$</span> system ready
             </div>
             <div style={{ marginBottom: '15px', lineHeight: 1.6 }}>
-              <span style={{ color: '#E32E30', textShadow: '0 0 5px #E32E30' }}>tutorai@bnb:~$</span> Chinese language & crypto tutor loaded
+              <span style={{ color: '#8c52ff', textShadow: '0 0 5px #8c52ff' }}>solagent@sol:~$</span> Chinese language & crypto tutor loaded
             </div>
             <br />
           </>
@@ -237,32 +237,32 @@ export default function Terminal({ startInHero = true, sessionId }) {
           <div key={i}>
             {m.role === 'user' && (
               <div style={{
-                color: '#FFD700',
+                color: '#ffffffff',
                 background: 'rgba(255, 215, 0, 0.1)',
-                borderLeft: '3px solid #FFD700',
+                borderLeft: '3px solid #ffffffff',
                 padding: '10px',
                 margin: '10px 0',
                 fontSize: '14px',
-                textShadow: '0 0 3px #FFD700'
+                textShadow: '0 0 3px #b11ff5ff'
               }}>
-                <span style={{ color: '#E32E30', textShadow: '0 0 5px #E32E30' }}>user@terminal:~$</span> {m.text}
+                <span style={{ color: '#8c52ff', textShadow: '0 0 5px #8c52ff' }}>user@terminal:~$</span> {m.text}
               </div>
             )}
 
             {m.role === 'ai' && (
               <div style={{
-                color: '#E32E30',
-                borderLeft: '3px solid #E32E30',
+                color: '#ffffffff',
+                borderLeft: '3px solid #8c52ff',
                 padding: '10px',
                 margin: '10px 0',
                 background: 'rgba(227, 46, 48, 0.05)',
-                fontSize: '13px'
+                fontSize: '16px'
               }}>
                 <div style={{
-                  color: '#FF4444',
+                  color: '#8c52ff',
                   fontWeight: 'bold',
                   marginBottom: '5px',
-                  textShadow: '0 0 5px #E32E30'
+                  textShadow: '0 0 5px #8c52ff'
                 }}>
                   [ANSWER]
                 </div>
@@ -276,12 +276,12 @@ export default function Terminal({ startInHero = true, sessionId }) {
 
         {isTyping && (
           <div style={{ marginBottom: '15px', lineHeight: 1.6 }}>
-            <span style={{ color: '#E32E30', textShadow: '0 0 5px #E32E30' }}>tutorai@bnb:~$</span> awaiting input
+            <span style={{ color: '#8c52ff', textShadow: '0 0 5px #8c52ff' }}>solagent@sol:~$</span> awaiting input
             <span style={{
               display: 'inline-block',
               width: '8px',
               height: '14px',
-              background: '#E32E30',
+              background: '#8c52ff',
               marginLeft: '2px',
               animation: 'blink 1s infinite'
             }}></span>
@@ -298,7 +298,7 @@ export default function Terminal({ startInHero = true, sessionId }) {
         left: '20px',
         right: '20px',
         background: '#000',
-        border: '1px solid #E32E30',
+        border: '1px solid #8c52ff',
         padding: '20px',
         zIndex: 1001
       }}>
@@ -311,8 +311,8 @@ export default function Terminal({ startInHero = true, sessionId }) {
             style={{
               flex: 1,
               background: '#000',
-              border: '1px solid #E32E30',
-              color: '#E32E30',
+              border: '1px solid #8c52ff',
+              color: '#8c52ff',
               padding: '12px',
               fontFamily: "'Courier New', monospace",
               fontSize: '14px',
@@ -323,7 +323,7 @@ export default function Terminal({ startInHero = true, sessionId }) {
             type="submit"
             disabled={isTyping}
             style={{
-              background: '#E32E30',
+              background: '#8c52ff',
               color: '#000',
               border: 'none',
               padding: '12px 24px',
@@ -336,13 +336,13 @@ export default function Terminal({ startInHero = true, sessionId }) {
             }}
             onMouseEnter={(e) => {
               if (!isTyping) {
-                e.target.style.background = '#FF4444';
-                e.target.style.boxShadow = '0 0 15px #E32E30';
+                e.target.style.background = '#8c52ff';
+                e.target.style.boxShadow = '0 0 15px #8c52ff';
                 e.target.style.transform = 'scale(1.05)';
               }
             }}
             onMouseLeave={(e) => {
-              e.target.style.background = '#E32E30';
+              e.target.style.background = '#8c52ff';
               e.target.style.boxShadow = 'none';
               e.target.style.transform = 'scale(1)';
             }}
@@ -358,7 +358,7 @@ export default function Terminal({ startInHero = true, sessionId }) {
           50%, 100% { opacity: 0; }
         }
         input::placeholder {
-          color: #a32;
+          color: rgba(255, 255, 255, 1);
         }
         div::-webkit-scrollbar {
           width: 10px;
@@ -367,11 +367,11 @@ export default function Terminal({ startInHero = true, sessionId }) {
           background: #000;
         }
         div::-webkit-scrollbar-thumb {
-          background: #E32E30;
+          background: #8c52ff;
           border: 1px solid #000;
         }
         div::-webkit-scrollbar-thumb:hover {
-          background: #FF4444;
+          background: #8c52ff;
         }
       `}</style>
     </div>
